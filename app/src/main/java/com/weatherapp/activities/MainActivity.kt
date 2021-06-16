@@ -15,17 +15,28 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.location.*
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
+import com.koushikdutta.async.future.FutureCallback
+import com.koushikdutta.ion.Ion
+import com.weatherapp.DFA
 import com.weatherapp.R
+import com.weatherapp.models.DailyForecastModel
 import com.weatherapp.models.WeatherResponse
 import com.weatherapp.network.WeatherService
 import com.weatherapp.utils.Constants
 import retrofit.*
+import java.lang.Exception
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 // OpenWeather Link : https://openweathermap.org/api
 /**
@@ -212,6 +223,20 @@ class MainActivity : AppCompatActivity() {
                         /** The de-serialized response body of a successful response. */
                         val weatherList: WeatherResponse = response.body()
                         Log.i("Response Result", "$weatherList")
+                        tvCity.text = weatherList.name
+                        ivIcon.setImageResource(getIconImage(weatherList.weather[0].icon.toString()))
+                        tvTemperature.text = weatherList.main.temp.toString() + "º"
+                        tvTempMin.text = weatherList.main.temp_min.toString() + "º"
+                        tvTempMax.text = weatherList.main.temp_max.toString() + "º"
+                        tvTempFeelsLike.text = weatherList.main.feels_like.toString() + "º"
+
+                        var dateFormat = SimpleDateFormat("EEE, d MMM HH:mm")
+                        var localDate = Date(Date().time + weatherList.timezone.toLong()*1000)
+
+                        tvDateTime.text=dateFormat.format(localDate)
+                        tvId.text = getIdText(weatherList.weather[0].id)
+
+                        loadDailyForecast(weatherList.coord.lon!!,weatherList.coord.lat!!)
                     } else {
                         // If the response is not success then we check the response code.
                         val sc = response.code()
@@ -243,4 +268,128 @@ class MainActivity : AppCompatActivity() {
             ).show()
         }
     }
+    private fun loadDailyForecast(lon: Double, lat: Double) {
+        var apiUrl = "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&exclude=hourly,%20minutely,%20current&units=metric&appid=" + Constants.APP_ID
+        Ion.with(this)
+            .load(apiUrl)
+            .asJsonObject()
+            .setCallback(object : FutureCallback<JsonObject> {
+                override fun onCompleted(e: Exception?, result: JsonObject?) {
+                    if (e != null) {
+                        e.printStackTrace()
+                        Toast.makeText(this@MainActivity, "Server Error: $e", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Log.d("result_response", result.toString())
+                        var weatherList: ArrayList<DailyForecastModel> = ArrayList()
+                        var timeZone: String = result!!.get("timezone").asString
+                        var daily: JsonArray = result!!.get("daily").asJsonArray
+
+                        for (i in 1..daily.size()-1) {
+                            var date = daily.get(i).asJsonObject.get("dt").asLong
+                            var temp = daily.get(i).asJsonObject.get("temp").asJsonObject.get("day").asDouble
+                            var icon = daily.get(i).asJsonObject.get("weather").asJsonArray.get(0).asJsonObject.get("icon").asString
+
+                            weatherList.add(DailyForecastModel(date, timeZone, temp, icon))
+                        }
+
+                        var dailyWeatherAdapter = DFA(weatherList, this@MainActivity)
+                        rvDailyForecast.layoutManager = LinearLayoutManager(this@MainActivity)
+                        rvDailyForecast.adapter = dailyWeatherAdapter
+                    }
+                }
+            })
+    }
+
+
+
+    fun getIdText(id: Int?) : String {
+        return when(id) {
+            200 -> "Thunderstorm with light rain"
+            201 -> "Thunderstorm with rain"
+            202 -> "Thunderstorm with heavy rain"
+            210 -> "Light thunderstorm"
+            211 -> "Thunderstorm"
+            212 -> "Heavy thunderstorm"
+            221 -> "Ragged thunderstorm"
+            230 -> "Thunderstorm with light drizzle"
+            231 -> "Thunderstorm with drizzle"
+            232 -> "Thunderstorm with heavy drizzle"
+
+            300 -> "Light intensity drizzle"
+            301 -> "Drizzle"
+            302 -> "Heavy intensity drizzle"
+            310 -> "Light intensity drizzle rain"
+            311 -> "Drizzle rain"
+            312 -> "Heavy intensity drizzle rain"
+            313 -> "Shower rain and drizzle"
+            314 -> "Heavy shower rain and drizzle"
+            321 -> "Shower drizzle"
+
+            500 -> "Light rain"
+            501 -> "Moderate rain"
+            502 -> "Heavy intensity rain"
+            503 -> "Very heavy rain"
+            504 -> "Extreme rain"
+            511 -> "Freezing rain"
+            520 -> "Light intensity shower rain"
+            521 -> "Shower rain"
+            522 -> "Heavy intensity shower rain"
+            531 -> "Ragged shower rain"
+
+            600 -> "Light snow"
+            601 -> "Snow"
+            602 -> "Heavy snow"
+            611 -> "Sleet"
+            612 -> "Light shower sleet"
+            613 -> "Shower sleet"
+            615 -> "Light rain and snow"
+            616 -> "Rain and snow"
+            620 -> "Light shower snow"
+            621 -> "Shower snow"
+            622 -> "Heavy shower snow"
+
+            701 -> "Mist"
+            711 -> "Smoke"
+            721 -> "Haze"
+            731 -> "Sand / Dust whirls"
+            741 -> "Fog"
+            751 -> "Sand"
+            761 -> "Dust"
+            762 -> "Volcanic ash"
+            771 -> "Squalls"
+            781 -> "Tornado"
+
+            800 -> "Few clouds: 11-25%"
+            801 -> "Scattered clouds: 25-50%"
+            802 -> "Broken clouds: 51-84%"
+            803 -> "Overcast clouds: 85-100%"
+            else -> ""
+        }
+    }
+
+    fun getIconImage(icon: String) : Int {
+        return when(icon) {
+            "01d" -> com.google.android.gms.location.R.drawable.d01
+            "01n" -> com.google.android.gms.location.R.drawable.n01
+            "02d" -> com.google.android.gms.location.R.drawable.d02
+            "02n" -> com.google.android.gms.location.R.drawable.n02
+            "03d" -> com.google.android.gms.location.R.drawable.n03
+            "03n" -> com.google.android.gms.location.R.drawable.n03
+            "04d" -> com.google.android.gms.location.R.drawable.n04
+            "04n" -> com.google.android.gms.location.R.drawable.n04
+            "09d" -> com.google.android.gms.location.R.drawable.n09
+            "09n" -> com.google.android.gms.location.R.drawable.n09
+            "10d" -> com.google.android.gms.location.R.drawable.d10
+            "10n" -> com.google.android.gms.location.R.drawable.n10
+            "11d" -> com.google.android.gms.location.R.drawable.d11
+            "11n" -> com.google.android.gms.location.R.drawable.n11
+            "13d" -> com.google.android.gms.location.R.drawable.d13
+            "13n" -> com.google.android.gms.location.R.drawable.n13
+            "50d" -> com.google.android.gms.location.R.drawable.d50
+            "50n" -> com.google.android.gms.location.R.drawable.n50
+            else -> com.google.android.gms.location.R.drawable.n50
+        }
+    }
+
+
 }
