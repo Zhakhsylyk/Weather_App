@@ -32,6 +32,7 @@ import com.weatherapp.models.DailyForecastModel
 import com.weatherapp.models.WeatherResponse
 import com.weatherapp.network.WeatherService
 import com.weatherapp.utils.Constants
+import kotlinx.android.synthetic.main.activity_main.*
 import retrofit.*
 import java.lang.Exception
 import java.text.SimpleDateFormat
@@ -369,27 +370,26 @@ class MainActivity : AppCompatActivity() {
 
     fun getIconImage(icon: String) : Int {
         return when(icon) {
-            "01d" -> com.google.android.gms.location.R.drawable.d01
-            "01n" -> com.google.android.gms.location.R.drawable.n01
-            "02d" -> com.google.android.gms.location.R.drawable.d02
-            "02n" -> com.google.android.gms.location.R.drawable.n02
-            "03d" -> com.google.android.gms.location.R.drawable.n03
-            "03n" -> com.google.android.gms.location.R.drawable.n03
-            "04d" -> com.google.android.gms.location.R.drawable.n04
-            "04n" -> com.google.android.gms.location.R.drawable.n04
-            "09d" -> com.google.android.gms.location.R.drawable.n09
-            "09n" -> com.google.android.gms.location.R.drawable.n09
-            "10d" -> com.google.android.gms.location.R.drawable.d10
-            "10n" -> com.google.android.gms.location.R.drawable.n10
-            "11d" -> com.google.android.gms.location.R.drawable.d11
-            "11n" -> com.google.android.gms.location.R.drawable.n11
-            "13d" -> com.google.android.gms.location.R.drawable.d13
-            "13n" -> com.google.android.gms.location.R.drawable.n13
-            "50d" -> com.google.android.gms.location.R.drawable.d50
-            "50n" -> com.google.android.gms.location.R.drawable.n50
-            else -> com.google.android.gms.location.R.drawable.n50
+            "01d" -> R.drawable.d01
+            "01n" -> R.drawable.n01
+            "02d" -> R.drawable.d02
+            "02n" -> R.drawable.n02
+            "03d" -> R.drawable.n03
+            "03n" -> R.drawable.n03
+            "04d" -> R.drawable.n04
+            "04n" -> R.drawable.n04
+            "09d" -> R.drawable.n09
+            "09n" -> R.drawable.n09
+            "10d" -> R.drawable.d10
+            "10n" -> R.drawable.n10
+            "11d" -> R.drawable.d11
+            "11n" -> R.drawable.n11
+            "13d" -> R.drawable.d13
+            "13n" -> R.drawable.n13
+            "50d" -> R.drawable.d50
+            "50n" -> R.drawable.n50
+            else -> R.drawable.n50
         }
     }
-
 
 }
