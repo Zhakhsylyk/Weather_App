@@ -227,15 +227,13 @@ class MainActivity : AppCompatActivity() {
                         tvCity.text = weatherList.name
                         ivIcon.setImageResource(getIconImage(weatherList.weather[0].icon.toString()))
                         tvTemperature.text = weatherList.main.temp.toString() + "º"
-                        tvTempMin.text = weatherList.main.temp_min.toString() + "º"
-                        tvTempMax.text = weatherList.main.temp_max.toString() + "º"
-                        tvTempFeelsLike.text = weatherList.main.feels_like.toString() + "º"
+
 
                         var dateFormat = SimpleDateFormat("EEE, d MMM HH:mm")
                         var localDate = Date(Date().time + weatherList.timezone.toLong()*1000)
 
                         tvDateTime.text=dateFormat.format(localDate)
-                        tvId.text = getIdText(weatherList.weather[0].id)
+//                        tvId.text = getIdText(weatherList.weather[0].id)
 
                         loadDailyForecast(weatherList.coord.lon!!,weatherList.coord.lat!!)
                     } else {
